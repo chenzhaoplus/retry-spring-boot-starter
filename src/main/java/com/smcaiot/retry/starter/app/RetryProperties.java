@@ -12,6 +12,10 @@ public class RetryProperties {
     public static final String PREFIX = "retry";
 
     /**
+     * 最大重试次数
+     */
+    private Integer maxRetryTimes;
+    /**
      * 一次重试多少条记录
      */
     private Integer retryPageSize;

@@ -51,6 +51,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         FindPage2BeRetriedParam pageParam = new FindPage2BeRetriedParam();
         pageParam.setPageSize(Optional.ofNullable(retryProp.getRetryPageSize()).orElse(20));
         pageParam.setStopRetryTypes(retryProp.getStopRetryTypes());
+        pageParam.setMaxRetryTimes(Optional.ofNullable(retryProp.getMaxRetryTimes()).orElse(10));
         for (; ; ) {
             PageResult<RetryQueue> pageResult = findPage2BeRetried(pageParam);
             List<RetryQueue> list = pageResult.getContent();
@@ -71,6 +72,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         FindPage2BeCallbackParam pageParam = new FindPage2BeCallbackParam();
         pageParam.setPageSize(Optional.ofNullable(retryProp.getCallbackPageSize()).orElse(50));
         pageParam.setStopCallbackTypes(retryProp.getStopCallbackTypes());
+        pageParam.setMaxRetryTimes(Optional.ofNullable(retryProp.getMaxRetryTimes()).orElse(10));
         for (; ; ) {
             PageResult<RetryQueue> pageResult = findPage2BeCallback(pageParam);
             List<RetryQueue> list = pageResult.getContent();
@@ -195,8 +197,8 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         if (!retryQuery.getGoOn()) {
             return true;
         }
-        Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
-        //Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
+        //Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
+        Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
         log.debug("重试成功, retryId: {}", retryQuery.getRetryId());
         return true;
     }

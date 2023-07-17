@@ -27,5 +27,5 @@ CREATE TABLE `schedule_info`
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='定时任务配置表';
 
-INSERT INTO `schedule_info`(`schedule_name`, `schedule_type`, `schedule_open`, `schedule_cron`, `crt_time`) VALUES ('回调', 'callback', '1', '0 */1 * * * ?', now());
 INSERT INTO `schedule_info`(`schedule_name`, `schedule_type`, `schedule_open`, `schedule_cron`, `crt_time`) VALUES ('重试', 'retry', '1', '0 */1 * * * ?', now());
+INSERT INTO `schedule_info`(`schedule_name`, `schedule_type`, `schedule_open`, `schedule_cron`, `crt_time`) VALUES ('回调', 'callback', '1', '0 */1 * * * ?', now());

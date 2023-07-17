@@ -16,4 +16,5 @@ public class FindPage2BeCallbackParam extends PageParam {
      */
     private String[] stopCallbackTypes;
 
+    private Integer maxRetryTimes;
 }

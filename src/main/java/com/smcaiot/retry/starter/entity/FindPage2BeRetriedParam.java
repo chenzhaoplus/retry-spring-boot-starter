@@ -16,4 +16,6 @@ public class FindPage2BeRetriedParam extends PageParam {
      */
     private String[] stopRetryTypes;
 
+    private Integer maxRetryTimes;
+
 }
