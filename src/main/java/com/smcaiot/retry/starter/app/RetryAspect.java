@@ -8,6 +8,7 @@ import com.smcaiot.retry.starter.annotation.RetryParam;
 import com.smcaiot.retry.starter.constants.RetryStatus;
 import com.smcaiot.retry.starter.entity.RetryQueue;
 import com.smcaiot.retry.starter.service.RetryQueueService;
+import com.smcaiot.retry.starter.util.ReflectUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -124,14 +125,8 @@ public class RetryAspect {
             return retryQueueService.doRetry(point, retryQuery);
         } catch (Throwable e) {
             log.warn(e.getMessage(), e);
-            if (Objects.isNull(retryQuery.getQueue())) {
-                RetryQueue queue = newRetryQueue(retryQuery).setRetryStatus(RetryStatus.to_be_retry.getCode())
-                        .setRetryClass(getMethodClass(point)).setRetryMethod(getMethodName(point));
-                retryQuery.setGoOn(retryQueueService.insertByRetryId4Retry(queue)).setQueue(queue);
-            } else {
-                retryQuery.getQueue().setRetryStatus(RetryStatus.to_be_retry.getCode());
-                retryQueueService.updateByRetryId4Retry(retryQuery.getQueue());// 次数+1
-            }
+            retryQuery.getQueue().setRetryStatus(RetryStatus.to_be_retry.getCode());
+            retryQueueService.saveOrUpdateByRetryId4Retry(retryQuery.getQueue());// 次数+1
             return false;
         }
     }
@@ -144,15 +139,6 @@ public class RetryAspect {
                 .setRetryParams(JSON.toJSONString(retryQuery.getArg()))
                 .setLastTime(new Date());
         return queue;
-    }
-
-    public static String getMethodName(ProceedingJoinPoint joinPoint) {
-        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        return methodSignature.getName();
-    }
-
-    public static String getMethodClass(ProceedingJoinPoint joinPoint) {
-        return joinPoint.getTarget().getClass().getName();
     }
 
     //private void afterRetry(RetryQuery retryQuery) {

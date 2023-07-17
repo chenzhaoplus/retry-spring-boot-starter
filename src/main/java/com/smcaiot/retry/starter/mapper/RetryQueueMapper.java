@@ -1,6 +1,8 @@
 package com.smcaiot.retry.starter.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.smcaiot.retry.starter.entity.FindPage2BeCallbackParam;
+import com.smcaiot.retry.starter.entity.FindPage2BeRetriedParam;
 import com.smcaiot.retry.starter.entity.RetryQueue;
 import com.smcaiot.retry.starter.util.PageParam;
 import org.apache.ibatis.annotations.Param;
@@ -14,11 +16,11 @@ public interface RetryQueueMapper extends BaseMapper<RetryQueue> {
 
     List<RetryQueue> find2BeRetried(@Param("retryId") String retryId, @Param("retryType") String retryType);
 
-    List<RetryQueue> findPage2BeRetried(@Param("pageParam") PageParam pageParam);
+    List<RetryQueue> findPage2BeRetried(@Param("pageParam") FindPage2BeRetriedParam pageParam);
 
     List<RetryQueue> findByRetryId(@Param("retryId") String retryId, @Param("retryType") String retryType);
 
-    List<RetryQueue> findPage2BeCallback(@Param("pageParam") PageParam pageParam);
+    List<RetryQueue> findPage2BeCallback(@Param("pageParam") FindPage2BeCallbackParam pageParam);
 
     int updateByRetryId4Retry(RetryQueue queue);
 

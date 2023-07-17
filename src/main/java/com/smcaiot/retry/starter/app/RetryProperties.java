@@ -23,5 +23,13 @@ public class RetryProperties {
      * 重试定时任务数量
      */
     private Integer scheduleCount;
+    /**
+     * 不执行重试的类型，默认所有类型都重试
+     */
+    private String[] stopRetryTypes;
+    /**
+     * 不执行回调的类型，默认所有类型都回调
+     */
+    private String[] stopCallbackTypes;
 
 }

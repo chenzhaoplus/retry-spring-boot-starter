@@ -10,7 +10,7 @@ CREATE TABLE `retry_queue`
     `retry_method` varchar(50) DEFAULT NULL COMMENT '重试方法',
     `retry_params` text COMMENT '重试参数',
     `crt_time`     timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `last_time`    timestamp NULL DEFAULT NULL COMMENT '最近一次重试时间',
+    `last_time`    timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近一次重试时间',
     `next_time`    timestamp NULL DEFAULT NULL COMMENT '下一次重试时间',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='重试队列表';

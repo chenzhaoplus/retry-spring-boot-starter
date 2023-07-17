@@ -79,6 +79,12 @@
         <where>
             and retry_status = '2'
             and next_time &lt;= NOW()
+            <if test="pageParam.stopCallbackTypes != null and pageParam.stopCallbackTypes.length > 0">
+                and retry_type not in
+                <foreach collection="pageParam.stopCallbackTypes" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
         </where>
     </select>
 
@@ -88,6 +94,12 @@
         <where>
             and retry_status = '1'
             and next_time &lt;= NOW()
+            <if test="pageParam.stopRetryTypes != null and pageParam.stopRetryTypes.length > 0">
+                and retry_type not in
+                <foreach collection="pageParam.stopRetryTypes" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
         </where>
     </select>
 

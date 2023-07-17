@@ -3,8 +3,6 @@ package com.smcaiot.retry.starter.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.ReflectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
@@ -13,21 +11,27 @@ import com.github.pagehelper.PageHelper;
 import com.smcaiot.retry.starter.app.RetryAspect;
 import com.smcaiot.retry.starter.app.RetryProperties;
 import com.smcaiot.retry.starter.constants.RetryStatus;
-import com.smcaiot.retry.starter.entity.*;
+import com.smcaiot.retry.starter.entity.FindPage2BeCallbackParam;
+import com.smcaiot.retry.starter.entity.FindPage2BeRetriedParam;
+import com.smcaiot.retry.starter.entity.RetryQueue;
 import com.smcaiot.retry.starter.mapper.RetryQueueMapper;
 import com.smcaiot.retry.starter.service.RetryCallback;
 import com.smcaiot.retry.starter.service.RetryQueueService;
-import com.smcaiot.retry.starter.util.SpringContext;
 import com.smcaiot.retry.starter.util.PageParam;
 import com.smcaiot.retry.starter.util.PageResult;
+import com.smcaiot.retry.starter.util.ReflectUtils;
+import com.smcaiot.retry.starter.util.SpringContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -44,8 +48,9 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
 
     @Override
     public void retry() {
-        PageParam pageParam = new PageParam();
+        FindPage2BeRetriedParam pageParam = new FindPage2BeRetriedParam();
         pageParam.setPageSize(Optional.ofNullable(retryProp.getRetryPageSize()).orElse(20));
+        pageParam.setStopRetryTypes(retryProp.getStopRetryTypes());
         for (; ; ) {
             PageResult<RetryQueue> pageResult = findPage2BeRetried(pageParam);
             List<RetryQueue> list = pageResult.getContent();
@@ -54,8 +59,8 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
                 break;
             }
             list.stream().forEach(queue -> {
-                Class<?> clz = getClass(queue.getRetryClass());
-                invokeMethod(clz, queue.getRetryMethod(), JSON.parse(queue.getRetryParams()));
+                Class<?> clz = ReflectUtils.getClass(queue.getRetryClass());
+                ReflectUtils.invokeMethod(clz, queue.getRetryMethod(), JSON.parse(queue.getRetryParams()));
             });
             pageParam.setPageNum(pageParam.getPageNum() + 1);
         }
@@ -63,8 +68,9 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
 
     @Override
     public void callback() {
-        PageParam pageParam = new PageParam();
+        FindPage2BeCallbackParam pageParam = new FindPage2BeCallbackParam();
         pageParam.setPageSize(Optional.ofNullable(retryProp.getCallbackPageSize()).orElse(50));
+        pageParam.setStopCallbackTypes(retryProp.getStopCallbackTypes());
         for (; ; ) {
             PageResult<RetryQueue> pageResult = findPage2BeCallback(pageParam);
             List<RetryQueue> list = pageResult.getContent();
@@ -77,8 +83,9 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
             } catch (Exception e) {
                 log.warn(e.getMessage(), e);
                 list.forEach(queue -> {
-                    queue.setRetryTimes(queue.getRetryTimes() + 1);
-                    queue.setNextTime(offsetMinute(queue.getRetryTimes() + 1));
+                    queue.setRetryStatus(RetryStatus.to_be_callback.getCode());
+                    //queue.setRetryTimes(queue.getRetryTimes() + 1);
+                    //queue.setNextTime(offsetMinute(queue.getRetryTimes() + 1));
                 });
                 updateBatchById(list);
             }
@@ -88,39 +95,24 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
 
     @Transactional(rollbackFor = Exception.class)
     public void callbackAndFinish(List<RetryQueue> list) {
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+        Date now = new Date();
         list.forEach(queue -> {
             queue.setRetryStatus(RetryStatus.finished.getCode());
-            queue.setRetryTimes(queue.getRetryTimes() + 1);
+            queue.setRetryTimes(queue.getRetryTimes() + 1).setLastTime(now);
             queue.setNextTime(offsetMinute(queue.getRetryTimes() + 1));
         });
         updateBatchById(list);
-        Assert.isTrue(retryCallback.doCallback(list), "重试回调失败");
+        List<String> retryIds = list.stream().map(RetryQueue::getRetryId).collect(Collectors.toList());
+        Assert.isTrue(retryCallback.doCallback(list), "重试回调失败: {}", JSON.toJSONString(retryIds));
+        //Assert.isTrue(false, "重试回调失败: {}", JSON.toJSONString(retryIds));// TODO
+        log.debug("重试回调成功: {}", JSON.toJSONString(list));
     }
 
     private Date offsetMinute(int minutes) {
         return DateUtil.offsetMinute(new Date(), minutes);
-    }
-
-    private <T> T invokeMethod(Class<?> clz, String methodName, Object... args) {
-        if (Objects.isNull(clz) || StrUtil.isBlank(methodName)) {
-            return null;
-        }
-        Object bean = SpringContext.getBean(clz);
-        Method method = ReflectUtil.getMethodByName(bean.getClass(), methodName);
-        if (method == null) {
-            log.warn("未找到指定方法：{}", bean.getClass().getName() + "." + methodName);
-            return null;
-        }
-        return ReflectUtil.invoke(bean, method, args);
-    }
-
-    private Class<?> getClass(String clzName) {
-        try {
-            return Class.forName(clzName);
-        } catch (ClassNotFoundException e) {
-            log.warn("未找到指定类：{}", clzName);
-            return null;
-        }
     }
 
     @Override
@@ -130,9 +122,9 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
     }
 
     @Override
-    public PageResult<RetryQueue> findPage2BeRetried(PageParam pageParam) {
-        try (Page<RetryQueue> page = PageHelper.startPage(pageParam)) {
-            List<RetryQueue> list = getBaseMapper().findPage2BeRetried(pageParam);
+    public PageResult<RetryQueue> findPage2BeRetried(FindPage2BeRetriedParam param) {
+        try (Page<RetryQueue> page = PageHelper.startPage(param)) {
+            List<RetryQueue> list = getBaseMapper().findPage2BeRetried(param);
             PageResult<RetryQueue> pageResult = new PageResult<>();
             pageResult.setContent(list);
             pageResult.setTotalElements(page.getTotal());
@@ -147,9 +139,9 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
     }
 
     @Override
-    public PageResult<RetryQueue> findPage2BeCallback(PageParam pageParam) {
-        try (Page<RetryQueue> page = PageHelper.startPage(pageParam)) {
-            List<RetryQueue> list = getBaseMapper().findPage2BeCallback(pageParam);
+    public PageResult<RetryQueue> findPage2BeCallback(FindPage2BeCallbackParam param) {
+        try (Page<RetryQueue> page = PageHelper.startPage(param)) {
+            List<RetryQueue> list = getBaseMapper().findPage2BeCallback(param);
             PageResult<RetryQueue> pageResult = new PageResult<>();
             pageResult.setContent(list);
             pageResult.setTotalElements(page.getTotal());
@@ -189,21 +181,31 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
     public boolean doRetry(ProceedingJoinPoint point, RetryAspect.RetryQuery retryQuery) throws Throwable {
         if (Objects.isNull(retryQuery.getQueue())) {
             RetryQueue queue = newRetryQueue(retryQuery).setRetryStatus(getRetryStatus(retryQuery.getDoCallback()))
-                    .setRetryClass(RetryAspect.getMethodClass(point))
-                    .setRetryMethod(RetryAspect.getMethodName(point));
+                    .setRetryClass(ReflectUtils.getMethodClass(point))
+                    .setRetryMethod(ReflectUtils.getMethodName(point));
             retryQuery.setGoOn(insertByRetryId4Retry(queue)).setQueue(queue);
         } else {
-            retryQuery.getQueue().setRetryStatus(getRetryStatus(retryQuery.getDoCallback()));
-            retryQuery.setGoOn(updateByRetryId4Retry(retryQuery.getQueue()));
+            if (reachNextTime(retryQuery.getQueue().getNextTime())) {
+                retryQuery.getQueue().setRetryStatus(getRetryStatus(retryQuery.getDoCallback()));
+                retryQuery.setGoOn(updateByRetryId4Callback(retryQuery.getQueue()));
+            } else {
+                retryQuery.setGoOn(false);
+            }
         }
         if (!retryQuery.getGoOn()) {
             return true;
         }
-        Assert.isTrue((Boolean) point.proceed(), "重试失败");
+        Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
+        //Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
+        log.debug("重试成功, retryId: {}", retryQuery.getRetryId());
         return true;
     }
 
-    private String getRetryStatus(boolean doCallback){
+    private boolean reachNextTime(Date nextTime) {
+        return DateUtil.compare(nextTime, new Date()) <= 0;
+    }
+
+    private String getRetryStatus(boolean doCallback) {
         return doCallback ? RetryStatus.to_be_callback.getCode() : RetryStatus.finished.getCode();
     }
 
