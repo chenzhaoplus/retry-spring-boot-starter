@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smcaiot.retry.starter.mapper.ScheduleInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.smcaiot.retry.starter.entity.ScheduleInfo">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="scheduleName" column="schedule_name" jdbcType="VARCHAR"/>
+        <result property="scheduleType" column="schedule_type" jdbcType="VARCHAR"/>
+        <result property="scheduleOpen" column="schedule_open" jdbcType="VARCHAR"/>
+        <result property="scheduleCron" column="schedule_cron" jdbcType="VARCHAR"/>
+        <result property="crtTime" column="crt_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,schedule_name,schedule_type,
+        schedule_open,schedule_cron,crt_time
+    </sql>
+
+    <select id="findTaskByTypes" resultMap="BaseResultMap">
+        select *
+        from schedule_info
+        <where>
+            and schedule_type in
+            <foreach collection="taskTypes" item="type" index="index" open="(" close=")" separator=",">
+                #{type}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="findOpenTasks" resultMap="BaseResultMap">
+        select *
+        from schedule_info
+        <where>
+            and schedule_open = '1'
+        </where>
+    </select>
+
+</mapper>

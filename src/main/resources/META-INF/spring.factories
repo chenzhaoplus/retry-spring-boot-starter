@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.smcaiot.retry.starter.app.RetryAutoConfiguration

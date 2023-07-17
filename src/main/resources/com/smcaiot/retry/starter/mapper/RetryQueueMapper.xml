@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.smcaiot.retry.starter.mapper.RetryQueueMapper">
+
+    <resultMap id="BaseResultMap" type="com.smcaiot.retry.starter.entity.RetryQueue">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="retryId" column="retry_id" jdbcType="VARCHAR"/>
+        <result property="retryType" column="retry_type" jdbcType="VARCHAR"/>
+        <result property="retryTimes" column="retry_times" jdbcType="INTEGER"/>
+        <result property="retryStatus" column="retry_status" jdbcType="VARCHAR"/>
+        <result property="retryClass" column="retry_class" jdbcType="VARCHAR"/>
+        <result property="retryMethod" column="retry_method" jdbcType="VARCHAR"/>
+        <result property="retryParams" column="retry_params" jdbcType="VARCHAR"/>
+        <result property="crtTime" column="crt_time" jdbcType="TIMESTAMP"/>
+        <result property="lastTime" column="last_time" jdbcType="TIMESTAMP"/>
+        <result property="nextTime" column="next_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,retry_id,retry_type,retry_times,retry_status,retry_class,retry_method,retry_params,
+        crt_time,last_time,next_time
+    </sql>
+
+    <insert id="insertByRetryId4Retry">
+        INSERT INTO `retry_queue`(`retry_id`, `retry_type`, `retry_times`,
+                                  `retry_status`, `retry_class`, `retry_method`, `retry_params`,
+                                  `last_time`, `next_time`)
+        VALUES (#{retryId}, #{retryType}, 0,
+                #{retryStatus}, #{retryClass}, #{retryMethod}, #{retryParams},
+                NOW(), DATE_ADD(NOW(), INTERVAL 1 MINUTE));
+    </insert>
+
+    <update id="updateByRetryId4Retry">
+        update retry_queue
+        set retry_times = (retry_times+1), retry_status=#{retryStatus},
+            retry_class=#{retryClass}, retry_method=#{retryMethod}, retry_params=#{retryParams},
+            last_time=NOW(), next_time=DATE_ADD(NOW(), INTERVAL (retry_times+1) MINUTE)
+        <where>
+            and retry_id = #{retryId}
+            and retry_type = #{retryType}
+        </where>
+    </update>
+
+    <update id="updateByRetryId4Callback">
+        update retry_queue
+        set retry_times = 0, retry_status=#{retryStatus},
+            retry_class=#{retryClass}, retry_method=#{retryMethod}, retry_params=#{retryParams},
+            last_time=NOW(), next_time=DATE_ADD(NOW(), INTERVAL 1 MINUTE)
+        <where>
+            and retry_id = #{retryId}
+            and retry_type = #{retryType}
+        </where>
+    </update>
+
+    <select id="find2BeRetried" resultMap="BaseResultMap">
+        select *
+        from retry_queue
+        <where>
+            and retry_status = '1'
+            and retry_id = #{retryId}
+            and retry_type = #{retryType}
+        </where>
+    </select>
+
+    <select id="findByRetryId" resultMap="BaseResultMap">
+        select *
+        from retry_queue
+        <where>
+            and retry_id = #{retryId}
+            and retry_type = #{retryType}
+        </where>
+    </select>
+
+    <select id="findPage2BeCallback" resultMap="BaseResultMap">
+        select *
+        from retry_queue
+        <where>
+            and retry_status = '2'
+            and next_time &lt;= NOW()
+        </where>
+    </select>
+
+    <select id="findPage2BeRetried" resultMap="BaseResultMap">
+        select *
+        from retry_queue
+        <where>
+            and retry_status = '1'
+            and next_time &lt;= NOW()
+        </where>
+    </select>
+
+</mapper>
