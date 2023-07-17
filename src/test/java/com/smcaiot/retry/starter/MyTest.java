@@ -18,12 +18,16 @@ public class MyTest {
 
     private final static Logger logger = LoggerFactory.getLogger(MyTest.class);
 
-    @Test
-    public void test() throws IOException, InterruptedException {
-        logger.info("启动成功！");
-        for (; ; ) {
-            Thread.sleep(60000);
-        }
-    }
+    //@Test
+    //public void test() throws IOException, InterruptedException {
+    //    logger.info("启动成功！");
+    //    try {
+    //        for (; ; ) {
+    //            Thread.sleep(60000);
+    //        }
+    //    } catch (InterruptedException e) {
+    //        log.warn(e.getMessage(), e);
+    //    }
+    //}
 
 }
