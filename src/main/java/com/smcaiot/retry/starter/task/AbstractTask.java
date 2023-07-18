@@ -31,25 +31,15 @@ public abstract class AbstractTask implements SchedulingConfigurer {
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        getSchedules().stream().filter(schedule -> PDBS_YES.equals(schedule.getScheduleOpen()))
-                .forEach(schedule -> addTask(schedule, taskRegistrar));
+        getSchedules().stream().forEach(schedule -> addTask(schedule, taskRegistrar));
     }
 
     private void addTask(ScheduleInfo schedule, ScheduledTaskRegistrar taskRegistrar) {
-        initTaskRunnable(schedule);
-        addTriggerTask(schedule, taskRegistrar);
-    }
-
-    private void addTriggerTask(ScheduleInfo schedule, ScheduledTaskRegistrar taskRegistrar) {
         taskRegistrar.addTriggerTask(
-                () -> runTask(schedule),
+                () -> runTask(schedule.getId()),
                 triggerContext -> {
                     ScheduleInfo latestSchedule = scheduleInfoService.getById(schedule.getId());
                     if (Objects.isNull(latestSchedule)) {
-                        return null;
-                    }
-                    if (!PDBS_YES.equals(latestSchedule.getScheduleOpen())) {
-                        log.warn("任务`{}`的开关是关闭的！", latestSchedule.getScheduleName());
                         return null;
                     }
                     if (StrUtil.isBlank(latestSchedule.getScheduleCron())) {
@@ -60,8 +50,14 @@ public abstract class AbstractTask implements SchedulingConfigurer {
                 });
     }
 
-    protected void runTask(ScheduleInfo schedule) {
+    protected void runTask(Integer id) {
+        ScheduleInfo schedule = scheduleInfoService.getById(id);
         try {
+            if (!PDBS_YES.equals(schedule.getScheduleOpen())) {
+                log.warn("任务`{}`的开关是关闭的！", schedule.getScheduleName());
+                return;
+            }
+            initTaskRunnable(schedule);
             long begin = System.currentTimeMillis();
             log.debug("开始{}.., cron: {}", schedule.getScheduleName(), schedule.getScheduleCron());
             schedule.getTaskExcute().run();
