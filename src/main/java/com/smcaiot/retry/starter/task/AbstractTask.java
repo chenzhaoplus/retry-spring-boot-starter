@@ -1,6 +1,7 @@
 package com.smcaiot.retry.starter.task;
 
 import cn.hutool.core.util.StrUtil;
+import com.smcaiot.retry.starter.constants.RetryScheduleType;
 import com.smcaiot.retry.starter.entity.ScheduleInfo;
 import com.smcaiot.retry.starter.service.ScheduleInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +10,10 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.smcaiot.retry.starter.constants.Constants.PDBS_YES;
 
@@ -27,11 +30,15 @@ public abstract class AbstractTask implements SchedulingConfigurer {
 
     protected abstract void initTaskRunnable(ScheduleInfo schedule);
 
-    protected abstract List<ScheduleInfo> getSchedules();
+    protected abstract List<String> getScheduleTypes();
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         getSchedules().stream().forEach(schedule -> addTask(schedule, taskRegistrar));
+    }
+
+    private List<ScheduleInfo> getSchedules() {
+        return scheduleInfoService.findTaskByTypes(getScheduleTypes());
     }
 
     private void addTask(ScheduleInfo schedule, ScheduledTaskRegistrar taskRegistrar) {

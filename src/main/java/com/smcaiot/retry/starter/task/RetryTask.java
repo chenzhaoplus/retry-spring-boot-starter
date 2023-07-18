@@ -40,10 +40,9 @@ public class RetryTask extends AbstractTask {
     }
 
     @Override
-    public List<ScheduleInfo> getSchedules() {
-        List<String> taskTypes = Arrays.stream(RetryScheduleType.values()).map(type -> type.name())
+    protected List<String> getScheduleTypes() {
+        return Arrays.stream(RetryScheduleType.values()).map(type -> type.name())
                 .collect(Collectors.toList());
-        return scheduleInfoService.findTaskByTypes(taskTypes);
     }
 
 }
