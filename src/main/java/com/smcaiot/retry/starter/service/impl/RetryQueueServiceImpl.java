@@ -106,7 +106,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         List<String> retryIds = list.stream().map(RetryQueue::getRetryId).collect(Collectors.toList());
         Assert.isTrue(retryCallback.doCallback(list), "重试回调失败: {}", JSON.toJSONString(retryIds));
         //Assert.isTrue(false, "重试回调失败: {}", JSON.toJSONString(retryIds));// TODO
-        log.debug("重试回调成功: {}", JSON.toJSONString(list));
+        log.debug("重试回调成功: {}", JSON.toJSONString(retryIds));
     }
 
     private Date offsetMinute(int minutes) {
