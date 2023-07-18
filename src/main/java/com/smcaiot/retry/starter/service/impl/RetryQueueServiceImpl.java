@@ -197,8 +197,8 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         if (!retryQuery.getGoOn()) {
             return true;
         }
-        //Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
-        Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
+        Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
+        //Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
         log.debug("重试成功, retryId: {}", retryQuery.getRetryId());
         return true;
     }
