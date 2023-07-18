@@ -84,11 +84,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
                 SpringContext.getBean(getClass()).callbackAndFinish(list);
             } catch (Exception e) {
                 log.warn(e.getMessage(), e);
-                list.forEach(queue -> {
-                    queue.setRetryStatus(RetryStatus.to_be_callback.getCode());
-                    //queue.setRetryTimes(queue.getRetryTimes() + 1);
-                    //queue.setNextTime(offsetMinute(queue.getRetryTimes() + 1));
-                });
+                list.forEach(queue -> queue.setRetryStatus(RetryStatus.to_be_callback.getCode()));
                 updateBatchById(list);
             }
             pageParam.setPageNum(pageParam.getPageNum() + 1);
