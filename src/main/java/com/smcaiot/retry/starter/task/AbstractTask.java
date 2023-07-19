@@ -60,6 +60,9 @@ public abstract class AbstractTask implements SchedulingConfigurer {
     protected void runTask(Integer id) {
         ScheduleInfo schedule = scheduleInfoService.getById(id);
         try {
+            if (Objects.isNull(schedule)) {
+                return;
+            }
             if (!PDBS_YES.equals(schedule.getScheduleOpen())) {
                 log.warn("任务`{}`的开关是关闭的！", schedule.getScheduleName());
                 return;
