@@ -98,6 +98,34 @@
         </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>smcaiot-nexus</id>
+            <name>smcaiot nexus (59.173.19.66:18181)</name>
+            <url>http://59.173.19.66:18181/repository/maven-public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://59.173.19.66:18181/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus-snapshots</id>
+            <name>Nexus Snapshot Repository</name>
+            <url>http://59.173.19.66:18181/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
