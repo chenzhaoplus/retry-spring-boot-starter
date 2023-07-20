@@ -61,6 +61,9 @@ public class RetryAspect {
 
     private RetryQuery getRetryQuery(Object[] args) {
         for (Object arg : args) {
+            if (Objects.isNull(arg)) {
+                continue;
+            }
             Class<?> clazz = arg.getClass();
             for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
                 if (!clazz.isAnnotationPresent(RetryParam.class)) {
