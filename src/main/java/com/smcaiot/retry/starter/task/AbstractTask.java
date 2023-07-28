@@ -1,19 +1,18 @@
 package com.smcaiot.retry.starter.task;
 
 import cn.hutool.core.util.StrUtil;
+import com.smcaiot.retry.starter.app.RetryProperties;
 import com.smcaiot.retry.starter.constants.RetryScheduleType;
 import com.smcaiot.retry.starter.entity.ScheduleInfo;
-import com.smcaiot.retry.starter.service.ScheduleInfoService;
+import com.smcaiot.retry.starter.service.ScheduleInfoService4Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static com.smcaiot.retry.starter.constants.Constants.PDBS_YES;
 
@@ -26,7 +25,9 @@ import static com.smcaiot.retry.starter.constants.Constants.PDBS_YES;
 public abstract class AbstractTask implements SchedulingConfigurer {
 
     @Autowired
-    protected ScheduleInfoService scheduleInfoService;
+    protected ScheduleInfoService4Retry scheduleInfoService4Retry;
+    @Autowired
+    private RetryProperties retryProp;
 
     protected abstract void initTaskRunnable(ScheduleInfo schedule);
 
@@ -38,14 +39,21 @@ public abstract class AbstractTask implements SchedulingConfigurer {
     }
 
     private List<ScheduleInfo> getSchedules() {
-        return scheduleInfoService.findTaskByTypes(getScheduleTypes());
+        List<String> scheduleTypes = getScheduleTypes();
+        if (Objects.nonNull(retryProp.getRetryOpen()) && !retryProp.getRetryOpen()) {
+            scheduleTypes.remove(RetryScheduleType.retry.name());
+        }
+        if (Objects.nonNull(retryProp.getCallbackOpen()) && !retryProp.getCallbackOpen()) {
+            scheduleTypes.remove(RetryScheduleType.callback.name());
+        }
+        return scheduleInfoService4Retry.findTaskByTypes(scheduleTypes);
     }
 
     private void addTask(ScheduleInfo schedule, ScheduledTaskRegistrar taskRegistrar) {
         taskRegistrar.addTriggerTask(
                 () -> runTask(schedule.getId()),
                 triggerContext -> {
-                    ScheduleInfo latestSchedule = scheduleInfoService.getById(schedule.getId());
+                    ScheduleInfo latestSchedule = scheduleInfoService4Retry.getById(schedule.getId());
                     if (Objects.isNull(latestSchedule)) {
                         return null;
                     }
@@ -58,7 +66,7 @@ public abstract class AbstractTask implements SchedulingConfigurer {
     }
 
     protected void runTask(Integer id) {
-        ScheduleInfo schedule = scheduleInfoService.getById(id);
+        ScheduleInfo schedule = scheduleInfoService4Retry.getById(id);
         try {
             if (Objects.isNull(schedule)) {
                 return;

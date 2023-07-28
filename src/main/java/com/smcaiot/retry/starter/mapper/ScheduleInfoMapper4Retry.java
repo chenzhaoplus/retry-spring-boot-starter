@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * @Entity com.smcaiot.ibmp.police.entity.ScheduleInfo
  */
-public interface ScheduleInfoMapper extends BaseMapper<ScheduleInfo> {
+public interface ScheduleInfoMapper4Retry extends BaseMapper<ScheduleInfo> {
 
     List<ScheduleInfo> findTaskByTypes(@Param("taskTypes") List<String> taskTypes);
 

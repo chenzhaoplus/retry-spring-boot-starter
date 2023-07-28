@@ -8,7 +8,7 @@ import java.util.List;
 /**
  *
  */
-public interface ScheduleInfoService extends IService<ScheduleInfo> {
+public interface ScheduleInfoService4Retry extends IService<ScheduleInfo> {
 
     List<ScheduleInfo> findTaskByTypes(List<String> taskTypes);
 

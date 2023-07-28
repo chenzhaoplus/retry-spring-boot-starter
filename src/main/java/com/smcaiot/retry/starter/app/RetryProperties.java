@@ -28,6 +28,14 @@ public class RetryProperties {
      */
     private Integer scheduleCount;
     /**
+     * 重试定时任务开关
+     */
+    private Boolean retryOpen;
+    /**
+     * 回调定时任务开关
+     */
+    private Boolean callbackOpen;
+    /**
      * 不执行重试的类型，默认所有类型都重试
      */
     private String[] stopRetryTypes;

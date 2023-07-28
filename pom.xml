@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.smcaiot</groupId>
     <artifactId>retry-spring-boot-starter</artifactId>
-    <version>1.0.1.RELEASE</version>
+    <version>1.0.2.RELEASE</version>
     <name>retry-spring-boot-starter</name>
     <description>retry-spring-boot-starter</description>
     <properties>
