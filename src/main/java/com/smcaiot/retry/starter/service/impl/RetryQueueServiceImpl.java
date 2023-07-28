@@ -105,7 +105,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
         updateBatchById(list);
         List<String> retryIds = list.stream().map(RetryQueue::getRetryId).collect(Collectors.toList());
         Assert.isTrue(retryCallback.doCallback(list), "重试回调失败: {}", JSON.toJSONString(retryIds));
-        //Assert.isTrue(false, "重试回调失败: {}", JSON.toJSONString(retryIds));// TODO
+        //Assert.isTrue(false, "重试回调失败: {}", JSON.toJSONString(retryIds));
         log.debug("重试回调成功: {}", JSON.toJSONString(retryIds));
     }
 
@@ -194,7 +194,7 @@ public class RetryQueueServiceImpl extends ServiceImpl<RetryQueueMapper, RetryQu
             return true;
         }
         Assert.isTrue((Boolean) point.proceed(), "重试失败, retryId：{}", retryQuery.getRetryId());
-        //Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());// TODO
+        //Assert.isTrue(false, "重试失败, retryId：{}", retryQuery.getRetryId());
         log.debug("重试成功, retryId: {}", retryQuery.getRetryId());
         return true;
     }
