@@ -5,7 +5,6 @@ import com.smcaiot.retry.starter.entity.ScheduleInfo;
 import com.smcaiot.retry.starter.service.RetryQueueService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
  * @Description:
  */
 @Component
-@EnableScheduling
 @Slf4j
 public class RetryTask extends AbstractTask {
 

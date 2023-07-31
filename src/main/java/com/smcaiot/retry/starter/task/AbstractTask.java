@@ -7,6 +7,7 @@ import com.smcaiot.retry.starter.entity.ScheduleInfo;
 import com.smcaiot.retry.starter.service.ScheduleInfoService4Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
@@ -22,6 +23,7 @@ import static com.smcaiot.retry.starter.constants.Constants.PDBS_YES;
  * @Description:
  */
 @Slf4j
+@EnableScheduling
 public abstract class AbstractTask implements SchedulingConfigurer {
 
     @Autowired
